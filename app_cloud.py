@@ -118,11 +118,15 @@ def secret_admin():
             email = data.get("email", "").strip().lower()
             password = data.get("password", "")
 
-        if email == "admin@arro.edu.pk" and hash_password(password) == os.getenv("ADMIN_PASSWORD_HASH"):
+# Fetch hash from Render; use hardcoded string as fallback if dashboard configuration is misformatted
+        expected_hash = os.getenv("ADMIN_PASSWORD_HASH") or "ecc73d49823f8b6f046653f751d2b8b32e93027ed757931ebbe10c36a29980c8"
+        expected_hash = expected_hash.strip().replace('"', '').replace("'", "")
+
+        if email == "admin@arro.edu.pk" and hash_password(password) == expected_hash:
             session["is_admin"] = True
             session["admin_email"] = "admin@arro.edu.pk"
             return redirect("/emaans-panel")
-            
+        
         if request.form:
             return "Invalid Credentials. Please head back and re-enter your password.", 401
         return jsonify({"success": False, "message": "Invalid credentials"})
