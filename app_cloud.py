@@ -818,7 +818,7 @@ def get_my_pin():
         SELECT pin FROM niqab_pins
         WHERE student_email = %s AND session_code = %s AND used = 0
         ORDER BY id DESC LIMIT 1
-    """)
+    """, (student_email, session_code))
     pin_row = cursor.fetchone()
     conn.close()
 
