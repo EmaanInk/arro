@@ -65,7 +65,6 @@ def record_scan(student_email, window_id, session_code):
 def record_attendance(student_email, session_code):
     conn = get_db()
     cursor = conn.cursor()
-    # Note: DATE(timestamp) = CURRENT_DATE replaces SQLite's DATE('now')
     cursor.execute("""
         SELECT * FROM attendance 
         WHERE student_email = %s 
@@ -118,15 +117,21 @@ def secret_admin():
             email = data.get("email", "").strip().lower()
             password = data.get("password", "")
 
-# Fetch hash from Render; use hardcoded string as fallback if dashboard configuration is misformatted
-        expected_hash = os.getenv("ADMIN_PASSWORD_HASH") or "ecc73d49823f8b6f046653f751d2b8b32e93027ed757931ebbe10c36a29980c8"
+        # Safe environment validation with your explicit hash string fallback
+        raw_hash = os.getenv("ADMIN_PASSWORD_HASH")
+        if not raw_hash:
+            expected_hash = "ecc73d49823f8b6f046653f751d2b8b32e93027ed757931ebbe10c36a29980c8"
+        else:
+            expected_hash = str(raw_hash)
+
+        # Sanitize any quotes or trailing spaces perfectly
         expected_hash = expected_hash.strip().replace('"', '').replace("'", "")
 
         if email == "admin@arro.edu.pk" and hash_password(password) == expected_hash:
             session["is_admin"] = True
             session["admin_email"] = "admin@arro.edu.pk"
             return redirect("/emaans-panel")
-        
+            
         if request.form:
             return "Invalid Credentials. Please head back and re-enter your password.", 401
         return jsonify({"success": False, "message": "Invalid credentials"})
@@ -307,7 +312,7 @@ def scan():
     return jsonify({"success": True, "message": "Present! Attendance marked"})
 
 # ==========================================
-#          SECURED ADMIN ENDPOINTS          
+#           SECURED ADMIN ENDPOINTS          
 # ==========================================
 
 @app.route("/admin/data")
@@ -809,7 +814,6 @@ def get_my_pin():
         conn.close()
         return jsonify({"success": False, "message": "Wrong device. Use your registered phone."})
 
-    # Note: ORDER BY created_at DESC LIMIT 1 syntax adjusted for Postgres
     cursor.execute("""
         SELECT pin FROM niqab_pins
         WHERE student_email = %s AND session_code = %s AND used = 0
@@ -832,10 +836,5 @@ def logout_admin():
     session.clear()
     return redirect("/emaans-panel")
 
-# ==========================================
-#               SERVER START                
-# ==========================================
-
 if __name__ == '__main__':
-    # Local fallback test execution block
     app.run(host='0.0.0.0', port=5000, debug=True)
