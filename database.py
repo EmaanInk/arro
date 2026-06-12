@@ -1,7 +1,7 @@
 import sqlite3
 
 def get_db():
-    conn = sqlite3.connect("arro.db", timeout=20)
+    conn = sqlite3.connect("/data/arro.db", timeout=20)
     conn.row_factory = sqlite3.Row
     return conn
 
