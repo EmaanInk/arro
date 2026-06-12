@@ -1,0 +1,7 @@
+.env
+arro.db
+__pycache__/
+*.pyc
+ssl_cert.crt
+ssl_cert.key
+haarcascade_eye.xml

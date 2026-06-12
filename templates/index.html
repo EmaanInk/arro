@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Arro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #0f0f0f;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 3rem;
+            letter-spacing: 8px;
+            margin-bottom: 8px;
+        }
+
+        h1 span { color: #6c63ff; }
+
+        .tagline {
+            color: #444;
+            font-size: 0.85rem;
+            letter-spacing: 3px;
+            margin-bottom: 60px;
+        }
+
+        .cards {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .role-card {
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 16px;
+            padding: 40px 50px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-width: 200px;
+            text-decoration: none;
+            color: white;
+            display: block;
+        }
+
+        .role-card:hover {
+            border-color: #6c63ff;
+            background: #1a1a2a;
+            transform: translateY(-4px);
+        }
+
+        .role-card .icon {
+            font-size: 2.5rem;
+            margin-bottom: 16px;
+        }
+
+        .role-card h2 {
+            font-size: 1rem;
+            letter-spacing: 3px;
+            color: #6c63ff;
+            margin-bottom: 8px;
+        }
+
+        .role-card p {
+            font-size: 0.8rem;
+            color: #555;
+            line-height: 1.5;
+        }
+
+        .version {
+            position: fixed;
+            bottom: 20px;
+            color: #222;
+            font-size: 0.75rem;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .version:hover {
+            color: #6c63ff; /* Subtly lights up when you hover over your secret gate */
+        }
+    </style>
+</head>
+<body>
+
+    <h1>ARR<span>O</span></h1>
+    <p class="tagline">SMART ATTENDANCE SYSTEM</p>
+
+    <div class="cards">
+        <a href="/teacher" class="role-card">
+            <div class="icon">👨‍🏫</div>
+            <h2>TEACHER</h2>
+            <p>Start a class, display QR, track live attendance</p>
+        </a>
+
+        <a href="/student" class="role-card">
+            <div class="icon">🎓</div>
+            <h2>STUDENT</h2>
+            <p>Register, scan QR, mark your attendance</p>
+        </a>
+    </div>
+
+    <p class="version" onclick="triggerAdminLogin()">ARRO v1.0</p>
+
+<script>
+function triggerAdminLogin() {
+    const email = prompt("Enter Admin Email:");
+    if (!email) return;
+    const password = prompt("Enter Admin Password:");
+    if (!password) return;
+
+    fetch('/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, password: password })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success && data.is_admin) {
+            window.location.href = "/emaans-panel";
+        } else {
+            alert("Invalid Admin Credentials or Unauthorized Entry Access!");
+        }
+    })
+    .catch(err => {
+        console.error("Error:", err);
+        alert("Server connection error.");
+    });
+}
+</script>
+
+</body>
+</html>

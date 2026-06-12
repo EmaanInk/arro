@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: arro
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: FLASK_SECRET_KEY
+        value: your_secret_key_here
+      - key: ADMIN_PASSWORD_HASH
+        value: ecc73d49823f8b6f046653f751d2b8b32e93027ed757931ebbe10c36a29980c8

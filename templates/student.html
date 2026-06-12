@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Arro - Student</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@4/dist/fp.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: Arial, sans-serif;
+            background: #0f0f0f;
+            color: white;
+            min-height: 100vh;
+            padding: 24px 16px;
+        }
+        .page-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            font-size: 1.8rem;
+            letter-spacing: 4px;
+            margin-bottom: 24px;
+            margin-top: 10px;
+            text-align: center;
+        }
+        h1 span { color: #6c63ff; }
+        .card {
+            background: #1a1a1a;
+            padding: 24px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 400px;
+        }
+        .card h2 {
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+            color: #6c63ff;
+            letter-spacing: 2px;
+        }
+        input[type="email"],
+        input[type="password"],
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 14px;
+            background: #2a2a2a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: white;
+            font-size: 0.95rem;
+        }
+        input::placeholder { color: #666; }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #6c63ff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            display: block;
+        }
+        button:hover { background: #574fd6; }
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #6c63ff;
+            color: #6c63ff;
+        }
+        .btn-outline:hover { background: #6c63ff22; }
+        .btn-ghost {
+            background: transparent;
+            border: 1px solid #444;
+            color: #666;
+            font-size: 0.85rem;
+        }
+        .btn-ghost:hover { background: #ffffff08; }
+        .btn-logout {
+            background: transparent;
+            border: 1px solid #333;
+            color: #555;
+            font-size: 0.8rem;
+        }
+        .message {
+            margin-top: 14px;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+        .msg-success { background: #1a3a1a; color: #4caf50; }
+        .msg-error   { background: #3a1a1a; color: #f44336; }
+        .msg-info    { background: #1a1a3a; color: #a78bfa; }
+        .msg-warning { background: #3a2a00; color: #ffb300; }
+        .toggle {
+            text-align: center;
+            margin-top: 16px;
+            color: #666;
+            font-size: 0.85rem;
+        }
+        .toggle span { color: #6c63ff; cursor: pointer; }
+        .email-hint {
+            font-size: 0.75rem;
+            margin-top: -10px;
+            margin-bottom: 10px;
+            display: none;
+        }
+        #camera-section {
+            display: none;
+            margin-bottom: 14px;
+            text-align: center;
+        }
+        video {
+            width: 100%;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: block;
+        }
+        canvas { display: none; }
+        #captured-preview {
+            width: 100%;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: none;
+        }
+        .niqab-badge {
+            background: #2a1a4a;
+            color: #a78bfa;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+            display: inline-block;
+            margin-bottom: 16px;
+        }
+        .fp-status {
+            font-size: 0.75rem;
+            color: #555;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .fp-status.ready { color: #4caf50; }
+        .page { display: none; width: 100%; max-width: 400px; }
+        .page.active { display: block; }
+
+        /* PIN display box */
+        .pin-box {
+            font-size: 2.5rem;
+            letter-spacing: 12px;
+            color: #6c63ff;
+            background: #0f0f0f;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 16px 0;
+            font-weight: bold;
+            text-align: center;
+            border: 1px solid #2a1a4a;
+        }
+        .pin-label {
+            font-size: 0.75rem;
+            color: #a78bfa;
+            text-align: center;
+            margin-bottom: 16px;
+            letter-spacing: 1px;
+        }
+
+        /* Pending approval screen */
+        .status-screen {
+            text-align: center;
+            padding: 20px 0;
+        }
+        .status-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+        }
+        .status-title {
+            font-size: 1rem;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+        }
+        .status-desc {
+            font-size: 0.82rem;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .history-row { padding: 12px 0; border-bottom: 1px solid #222; }
+        .history-row .subject { font-size: 0.85rem; color: white; margin-bottom: 4px; }
+        .history-row .meta    { font-size: 0.75rem; color: #555; }
+        .history-row .status  { font-size: 0.72rem; color: #4caf50; margin-top: 4px; }
+
+        @media (max-width: 480px) {
+            body { padding: 16px 12px; }
+            h1 { font-size: 1.5rem; margin-bottom: 16px; }
+            .card { padding: 20px 16px; }
+        }
+    </style>
+</head>
+<body>
+<div class="page-wrap">
+
+    <h1>ARR<span>O</span></h1>
+
+    <!-- LOGIN -->
+    <div class="card page active" id="page-login">
+        <h2>STUDENT LOGIN</h2>
+        <input type="email" id="login-email" placeholder="University email"/>
+        <input type="password" id="login-password" placeholder="Password"/>
+        <button onclick="submitLogin()">LOGIN</button>
+        <div id="login-msg" style="display:none;" class="message"></div>
+        <div class="toggle">No account? <span onclick="goTo('register')">Register here</span></div>
+    </div>
+
+    <!-- REGISTER -->
+    <div class="card page" id="page-register">
+        <h2>REGISTER</h2>
+        <input type="email" id="reg-email" placeholder="University email (.edu.pk)" oninput="validateEmail(this)"/>
+        <div class="email-hint" id="email-hint"></div>
+        <input type="password" id="reg-password" placeholder="Create password"/>
+
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;color:#aaa;font-size:0.9rem;margin-bottom:14px;">
+            <input type="checkbox" id="is-niqab-check"
+                   style="width:18px;height:18px;cursor:pointer;"
+                   onchange="toggleNiqabMode(this)"/>
+            I wear niqab (PIN-based attendance)
+        </label>
+
+        <p id="niqab-note" style="display:none;font-size:0.75rem;color:#a78bfa;margin-bottom:14px;padding:8px;background:#1a0a2e;border-radius:6px;">
+            🔒 Your account will require admin approval before PIN attendance is activated.
+        </p>
+
+        <div id="camera-section">
+            <label style="color:#aaa;font-size:0.85rem;margin-bottom:6px;display:block;">Take your photo for face recognition</label>
+            <video id="reg-video" autoplay playsinline style="display:none;"></video>
+            <canvas id="reg-canvas"></canvas>
+            <img id="captured-preview" alt="Captured face"/>
+            <button class="btn-outline" onclick="startCamera()">OPEN CAMERA</button>
+            <button class="btn-outline" id="capture-btn" onclick="capturePhoto()" style="display:none;">CAPTURE PHOTO</button>
+            <button class="btn-outline" id="retake-btn" onclick="retakePhoto()" style="display:none;">RETAKE</button>
+        </div>
+
+        <div class="fp-status" id="fp-status">📱 Reading device signature...</div>
+        <button onclick="register()">CREATE ACCOUNT</button>
+        <div id="register-msg" style="display:none;" class="message"></div>
+        <div class="toggle">Have an account? <span onclick="goTo('login')">Login here</span></div>
+    </div>
+
+    <!-- PENDING APPROVAL -->
+    <div class="card page" id="page-pending">
+        <div class="status-screen">
+            <div class="status-icon">⏳</div>
+            <div class="status-title" style="color:#ffb300;">AWAITING APPROVAL</div>
+            <p class="status-desc">Your niqab/PIN attendance request is pending admin approval. You will be able to mark attendance once approved.</p>
+            <p class="status-desc" style="margin-top:10px;" id="pending-email"></p>
+        </div>
+        <button class="btn-ghost" onclick="logout()" style="margin-top:20px;">LOGOUT</button>
+    </div>
+
+    <!-- REJECTED -->
+    <div class="card page" id="page-rejected">
+        <div class="status-screen">
+            <div class="status-icon">❌</div>
+            <div class="status-title" style="color:#f44336;">REQUEST REJECTED</div>
+            <p class="status-desc">Your niqab attendance request was rejected. Please contact your admin for more information.</p>
+        </div>
+        <button class="btn-ghost" onclick="logout()" style="margin-top:20px;">LOGOUT</button>
+    </div>
+
+    <!-- SCAN PAGE -->
+    <div class="page" id="page-scan">
+        <div class="card" style="text-align:center;">
+            <h2>MARK ATTENDANCE</h2>
+            <p style="color:#aaa;font-size:0.85rem;margin-bottom:16px;">Scan the QR code on the projector</p>
+            <video id="scan-video" autoplay playsinline style="display:none;"></video>
+            <video id="face-video" autoplay playsinline style="display:none;"></video>
+            <canvas id="scan-canvas" style="display:none;"></canvas>
+            <button onclick="startScan()">START SCANNING</button>
+            <div id="scan-msg" style="display:none;" class="message"></div>
+            <button class="btn-ghost" onclick="goTo('history')" style="margin-top:6px;">MY ATTENDANCE HISTORY</button>
+            <button class="btn-logout" onclick="logout()" style="margin-top:6px;">LOGOUT</button>
+        </div>
+    </div>
+
+    <!-- NIQAB PIN PAGE -->
+    <div class="page" id="page-niqab">
+        <div class="card" style="text-align:center;">
+            <h2>MARK ATTENDANCE</h2>
+            <div class="niqab-badge">🔒 SECURE PIN MODE</div>
+            <p style="color:#aaa;font-size:0.85rem;margin-bottom:16px;">Your PIN for this session</p>
+
+            <video id="niqab-video" autoplay playsinline style="display:none;"></video>
+            <canvas id="niqab-canvas" style="display:none;"></canvas>
+
+            <!-- PIN fetching state -->
+            <div id="pin-fetching" style="padding:20px 0; color:#666; font-size:0.85rem;">
+                🔄 Fetching your PIN...
+            </div>
+
+            <!-- PIN ready state -->
+            <div id="pin-ready" style="display:none;">
+                <div class="pin-box" id="pin-display">——</div>
+                <p class="pin-label">YOUR SESSION PIN — TAP SUBMIT TO MARK ATTENDANCE</p>
+                <button onclick="submitNiqabPin()">SUBMIT ATTENDANCE</button>
+            </div>
+
+            <!-- PIN not available yet -->
+            <div id="pin-waiting" style="display:none; padding:16px 0;">
+                <p style="color:#ffb300; font-size:0.85rem; margin-bottom:16px;">
+                    ⏳ Teacher hasn't sent PINs yet. Please wait.
+                </p>
+                <button class="btn-outline" onclick="fetchMyPin()">RETRY</button>
+            </div>
+
+            <div id="niqab-msg" style="display:none;" class="message"></div>
+            <button class="btn-ghost" onclick="goTo('scan')" style="margin-top:10px;">BACK</button>
+        </div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="page" id="page-history">
+        <div class="card">
+            <h2>MY ATTENDANCE</h2>
+            <div id="history-list">
+                <p style="color:#555;text-align:center;padding:20px;">Loading...</p>
+            </div>
+            <button class="btn-outline" onclick="goTo('scan')" style="margin-top:16px;">BACK TO SCAN</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // ── State ──
+    let capturedFaceBase64 = null;
+    let scanInterval = null;
+    let activeStream = null;
+    let deviceFingerprint = null;
+    let pendingQRData = null;
+
+    // ── Fingerprint ──
+    async function initFingerprint() {
+        try {
+            const fp = await FingerprintJS.load();
+            const result = await fp.get();
+            deviceFingerprint = result.visitorId;
+            document.getElementById("fp-status").textContent = "✓ Device registered";
+            document.getElementById("fp-status").className = "fp-status ready";
+        } catch(e) {
+            deviceFingerprint = btoa(
+                navigator.userAgent + screen.width + "x" + screen.height +
+                navigator.language + new Date().getTimezoneOffset()
+            );
+        }
+    }
+    initFingerprint();
+
+    // ── Page router ──
+    function goTo(name) {
+        stopAllStreams();
+        document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+        const el = document.getElementById("page-" + name);
+        if (el) el.classList.add("active");
+
+        if (name === "register") {
+            document.getElementById("is-niqab-check").checked = false;
+            document.getElementById("niqab-note").style.display = "none";
+            document.getElementById("camera-section").style.display = "block";
+            capturedFaceBase64 = null;
+        }
+        if (name === "history") loadHistory();
+    }
+
+    // ── Streams ──
+    function stopAllStreams() {
+        if (scanInterval) { clearInterval(scanInterval); scanInterval = null; }
+        if (activeStream) { activeStream.getTracks().forEach(t => t.stop()); activeStream = null; }
+    }
+
+    // ── Messages ──
+    function showMsg(id, text, type) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.textContent = text;
+        el.className = "message msg-" + type;
+        el.style.display = "block";
+    }
+
+    // ── Email validation ──
+    function validateEmail(input) {
+        const hint = document.getElementById("email-hint");
+        const val = input.value.trim();
+        if (!val) { hint.style.display = "none"; return; }
+        if (val.endsWith(".edu.pk")) {
+            hint.style.display = "block";
+            hint.style.color = "#4caf50";
+            hint.textContent = "✓ Valid university email";
+            input.style.borderColor = "#4caf50";
+        } else {
+            hint.style.display = "block";
+            hint.style.color = "#f44336";
+            hint.textContent = "Must end in .edu.pk";
+            input.style.borderColor = "#f44336";
+        }
+    }
+
+    // ── Niqab toggle ──
+    function toggleNiqabMode(cb) {
+        document.getElementById("niqab-note").style.display = cb.checked ? "block" : "none";
+        document.getElementById("camera-section").style.display = cb.checked ? "none" : "block";
+        if (cb.checked) { capturedFaceBase64 = null; stopAllStreams(); }
+    }
+
+    // ── Camera (registration) ──
+    function startCamera() {
+        stopAllStreams();
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
+            .then(stream => {
+                activeStream = stream;
+                const v = document.getElementById("reg-video");
+                v.srcObject = stream;
+                v.style.display = "block";
+                document.getElementById("captured-preview").style.display = "none";
+                document.getElementById("capture-btn").style.display = "block";
+                document.getElementById("retake-btn").style.display = "none";
+            })
+            .catch(() => showMsg("register-msg", "Camera access denied", "error"));
+    }
+
+    function capturePhoto() {
+        const v = document.getElementById("reg-video");
+        const c = document.getElementById("reg-canvas");
+        if (!v.videoWidth) return;
+        c.width = v.videoWidth; c.height = v.videoHeight;
+        c.getContext("2d").drawImage(v, 0, 0);
+        capturedFaceBase64 = c.toDataURL("image/jpeg", 0.95).split(",")[1];
+        const preview = document.getElementById("captured-preview");
+        preview.src = "data:image/jpeg;base64," + capturedFaceBase64;
+        preview.style.display = "block";
+        v.style.display = "none";
+        document.getElementById("capture-btn").style.display = "none";
+        document.getElementById("retake-btn").style.display = "block";
+        stopAllStreams();
+    }
+
+    function retakePhoto() {
+        capturedFaceBase64 = null;
+        startCamera();
+    }
+
+    // ── Register ──
+    async function register() {
+        const email = document.getElementById("reg-email").value.trim();
+        const password = document.getElementById("reg-password").value;
+        const isNiqab = document.getElementById("is-niqab-check").checked;
+
+        if (!email || !password) { showMsg("register-msg", "Fill in all fields", "error"); return; }
+        if (!email.endsWith(".edu.pk")) { showMsg("register-msg", "Use your university email (.edu.pk)", "error"); return; }
+        if (!isNiqab && !capturedFaceBase64) { showMsg("register-msg", "Please capture your photo", "error"); return; }
+        if (!deviceFingerprint) { showMsg("register-msg", "Device not ready, please wait...", "error"); return; }
+
+        showMsg("register-msg", "Creating account...", "success");
+        try {
+            const res = await fetch("/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    email, password,
+                    face_image: capturedFaceBase64,
+                    is_niqab: isNiqab ? 1 : 0
+                })
+            });
+            const data = await res.json();
+            if (!data.success) { showMsg("register-msg", data.message, "error"); return; }
+
+            await fetch("/register-fingerprint", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, fingerprint: deviceFingerprint })
+            });
+
+            if (isNiqab) {
+                showMsg("register-msg", "Account created! Awaiting admin approval for PIN mode.", "success");
+            } else {
+                showMsg("register-msg", "Account created! Please login.", "success");
+            }
+            setTimeout(() => goTo("login"), 2000);
+        } catch(e) {
+            showMsg("register-msg", "Registration failed", "error");
+        }
+    }
+
+    // ── Login ──
+    // ── Updated Student Login with Admin Router Gate ──
+    async function submitLogin() {
+        const email = document.getElementById("login-email").value.trim();
+        const password = document.getElementById("login-password").value;
+        if (!email || !password) { showMsg("login-msg", "Fill in all fields", "error"); return; }
+
+        showMsg("login-msg", "Connecting...", "success");
+        try {
+            const res = await fetch("/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password })
+            });
+            const data = await res.json();
+            
+            if (data.success) {
+                // Check if the logging user is YOU (the Admin)
+                if (data.is_admin) {
+                    showMsg("login-msg", "Welcome Admin! Redirecting...", "success");
+                    setTimeout(() => {
+                        window.location.href = "/emaans-panel";
+                    }, 1000);
+                    return; // Stop execution here so it doesn't process student state
+                }
+
+                // Standard Student Routing Logic
+                localStorage.setItem("arro_email", email);
+                localStorage.setItem("arro_is_niqab", data.is_niqab);
+                localStorage.setItem("arro_niqab_status", data.niqab_status);
+                routeAfterLogin(data.niqab_status);
+            } else {
+                showMsg("login-msg", data.message, "error");
+            }
+        } catch(e) {
+            showMsg("login-msg", "Login failed", "error");
+        }
+    }
+    
+    function routeAfterLogin(niqab_status) {
+        if (niqab_status === "pending") {
+            const email = localStorage.getItem("arro_email");
+            document.getElementById("pending-email").textContent = email;
+            goTo("pending");
+        } else if (niqab_status === "rejected") {
+            goTo("rejected");
+        } else {
+            // "none" (face student) or "approved" (niqab student) — both go to scan
+            goTo("scan");
+        }
+    }
+
+    // ── Logout ──
+    function logout() {
+        stopAllStreams();
+        localStorage.removeItem("arro_email");
+        localStorage.removeItem("arro_is_niqab");
+        localStorage.removeItem("arro_niqab_status");
+        goTo("login");
+    }
+
+    // ── QR Scan ──
+    function startScan() {
+        stopAllStreams();
+        const video = document.getElementById("scan-video");
+        video.style.display = "block";
+        document.getElementById("face-video").style.display = "none";
+        document.getElementById("scan-msg").style.display = "none";
+
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+            .then(stream => {
+                activeStream = stream;
+                video.srcObject = stream;
+                video.play();
+                scanInterval = setInterval(() => scanFrame(video), 500);
+            })
+            .catch(() => showMsg("scan-msg", "Camera access denied", "error"));
+    }
+
+    function scanFrame(video) {
+        if (!video.videoWidth) return;
+        const c = document.getElementById("scan-canvas");
+        c.width = video.videoWidth; c.height = video.videoHeight;
+        const ctx = c.getContext("2d");
+        ctx.drawImage(video, 0, 0);
+        const img = ctx.getImageData(0, 0, c.width, c.height);
+        const code = jsQR(img.data, c.width, c.height);
+        if (code) { stopAllStreams(); processQR(code.data); }
+    }
+
+    async function processQR(qrData) {
+        if (qrData.includes("/")) qrData = qrData.split("/").pop();
+        if (!qrData.includes(":")) { showMsg("scan-msg", "Invalid QR format", "error"); return; }
+
+        const email = localStorage.getItem("arro_email");
+        if (!email) { showMsg("scan-msg", "Please login first", "error"); goTo("login"); return; }
+
+        try {
+            const res = await fetch("/check-niqab?email=" + encodeURIComponent(email));
+            const data = await res.json();
+
+            if (data.is_niqab === 1) {
+                // Approved niqab student — go to PIN page and auto-fetch PIN
+                pendingQRData = qrData;
+                goTo("niqab");
+                fetchMyPin();
+            } else {
+                // Regular face student
+                document.getElementById("scan-video").style.display = "none";
+                showMsg("scan-msg", "QR scanned. Look at camera.", "success");
+                const [win, room] = qrData.split(":");
+                captureFace(win, room, email);
+            }
+        } catch(e) {
+            showMsg("scan-msg", "Network error", "error");
+        }
+    }
+
+    // ── Auto-fetch PIN on registered device ──
+    async function fetchMyPin() {
+        if (!pendingQRData) return;
+        const email = localStorage.getItem("arro_email");
+        const [win, room] = pendingQRData.split(":");
+
+        // Show fetching state
+        document.getElementById("pin-fetching").style.display = "block";
+        document.getElementById("pin-ready").style.display = "none";
+        document.getElementById("pin-waiting").style.display = "none";
+
+        try {
+            const res = await fetch("/get-my-pin", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    student_email: email,
+                    session_code: room,
+                    fingerprint: deviceFingerprint
+                })
+            });
+            const data = await res.json();
+
+            document.getElementById("pin-fetching").style.display = "none";
+
+            if (data.success) {
+                // PIN found — show it, student just taps Submit
+                document.getElementById("pin-display").textContent = data.pin;
+                document.getElementById("pin-ready").style.display = "block";
+                // Start silent selfie camera
+                startNiqabCamera();
+            } else if (data.message.includes("No PIN available")) {
+                // Teacher hasn't sent PINs yet
+                document.getElementById("pin-waiting").style.display = "block";
+            } else {
+                // Wrong device or not approved
+                showMsg("niqab-msg", data.message, "error");
+            }
+        } catch(e) {
+            document.getElementById("pin-fetching").style.display = "none";
+            showMsg("niqab-msg", "Network error", "error");
+        }
+    }
+
+    // ── Niqab selfie (silent, for records) ──
+    function startNiqabCamera() {
+        const video = document.getElementById("niqab-video");
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
+            .then(stream => {
+                activeStream = stream;
+                video.srcObject = stream;
+                video.play();
+            })
+            .catch(() => console.log("Selfie camera unavailable"));
+    }
+
+    function captureNiqabSelfie() {
+        const video = document.getElementById("niqab-video");
+        const c = document.getElementById("niqab-canvas");
+        if (!video.videoWidth) return null;
+        c.width = video.videoWidth; c.height = video.videoHeight;
+        c.getContext("2d").drawImage(video, 0, 0);
+        return c.toDataURL("image/jpeg", 0.7).split(",")[1];
+    }
+
+    async function submitNiqabPin() {
+        const email = localStorage.getItem("arro_email");
+        const pin = document.getElementById("pin-display").textContent.trim();
+
+        if (!pin || pin === "——") { showMsg("niqab-msg", "No PIN loaded", "error"); return; }
+        if (!deviceFingerprint) { showMsg("niqab-msg", "Device not ready", "error"); return; }
+        if (!pendingQRData) { showMsg("niqab-msg", "Session expired, scan QR again", "error"); return; }
+
+        const [win, room] = pendingQRData.split(":");
+        const selfie = captureNiqabSelfie();
+
+        showMsg("niqab-msg", "Marking attendance...", "success");
+
+        try {
+            const res = await fetch("/scan-niqab", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    window: win,
+                    classroom_id: room,
+                    student_email: email,
+                    pin: pin,
+                    fingerprint: deviceFingerprint,
+                    selfie: selfie
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                showMsg("niqab-msg", "✓ " + data.message, "success");
+                pendingQRData = null;
+                stopAllStreams();
+                document.getElementById("pin-ready").style.display = "none";
+            } else {
+                showMsg("niqab-msg", "✗ " + data.message, "error");
+            }
+        } catch(e) {
+            showMsg("niqab-msg", "Network error", "error");
+        }
+    }
+
+    // ── Face capture ──
+    function captureFace(win, room, email) {
+        const video = document.getElementById("face-video");
+        video.style.display = "block";
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
+            .then(stream => {
+                activeStream = stream;
+                video.srcObject = stream;
+                video.play();
+                setTimeout(() => {
+                    if (!video.videoWidth) return;
+                    const c = document.getElementById("scan-canvas");
+                    c.width = video.videoWidth; c.height = video.videoHeight;
+                    c.getContext("2d").drawImage(video, 0, 0);
+                    const face = c.toDataURL("image/jpeg", 0.95).split(",")[1];
+                    stopAllStreams();
+                    video.style.display = "none";
+                    showMsg("scan-msg", "Verifying face...", "success");
+                    submitAttendance(win, room, email, face);
+                }, 4000);
+            })
+            .catch(() => showMsg("scan-msg", "Camera access denied", "error"));
+    }
+
+    function submitAttendance(win, room, email, face) {
+        fetch("/scan", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ window: win, classroom_id: room, student_email: email, live_face: face })
+        })
+        .then(r => r.json())
+        .then(d => showMsg("scan-msg", (d.success ? "✓ " : "✗ ") + d.message, d.success ? "success" : "error"))
+        .catch(() => showMsg("scan-msg", "Network error", "error"));
+    }
+
+    // ── History ──
+    function loadHistory() {
+        const email = localStorage.getItem("arro_email");
+        if (!email) return;
+        const list = document.getElementById("history-list");
+        list.innerHTML = '<p style="color:#555;text-align:center;padding:20px;">Loading...</p>';
+        fetch("/student-history?email=" + encodeURIComponent(email))
+            .then(r => r.json())
+            .then(data => {
+                if (!data.records.length) {
+                    list.innerHTML = '<p style="color:#555;text-align:center;padding:20px;">No records yet</p>';
+                    return;
+                }
+                list.innerHTML = data.records.map(r => `
+                    <div class="history-row">
+                        <div class="subject">${r.subject || "Class"} — ${r.section || ""}</div>
+                        <div class="meta">${r.room || ""} · ${r.date || r.timestamp.split(" ")[0]}</div>
+                        <div class="status">✓ PRESENT</div>
+                    </div>
+                `).join("");
+            })
+            .catch(() => {
+                list.innerHTML = '<p style="color:#f44336;text-align:center;padding:20px;">Failed to load</p>';
+            });
+    }
+
+    // ── Auto-login on page load ──
+    (async function() {
+        const email = localStorage.getItem("arro_email");
+        if (!email) return;
+        try {
+            const res = await fetch("/check-niqab?email=" + encodeURIComponent(email));
+            if (res.ok) {
+                const data = await res.json();
+                const niqab_status = data.niqab_status || localStorage.getItem("arro_niqab_status") || "none";
+                routeAfterLogin(niqab_status);
+            } else {
+                localStorage.clear();
+            }
+        } catch(e) {
+            localStorage.clear();
+        }
+    })();
+let pinCheckInterval;
+
+function startLookingForPin(sessionCode, studentEmail, deviceFingerprint) {
+    // Clear any old loops first
+    if (pinCheckInterval) clearInterval(pinCheckInterval);
+
+    // Check immediately, then check every 3 seconds
+    checkMyPin(sessionCode, studentEmail, deviceFingerprint);
+    
+    pinCheckInterval = setInterval(() => {
+        checkMyPin(sessionCode, studentEmail, deviceFingerprint);
+    }, 3000); 
+}
+
+function checkMyPin(sessionCode, studentEmail, deviceFingerprint) {
+    fetch('/get-my-pin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            student_email: studentEmail,
+            session_code: sessionCode,
+            fingerprint: deviceFingerprint
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success && data.pin) {
+            // STOP checking once we successfully get the PIN
+            clearInterval(pinCheckInterval);
+            
+            // SHOW IT ON THE PHONE SCREEN!
+            document.getElementById('pin-display-box').innerText = data.pin;
+            alert(`Your secure attendance PIN is: ${data.pin}`);
+        } else {
+            console.log("No PIN generated by the teacher yet...");
+        }
+    })
+    .catch(err => console.error("Error fetching PIN:", err));
+}
+</script>
+</body>
+</html>
